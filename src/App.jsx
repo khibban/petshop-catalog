@@ -140,7 +140,11 @@ function ProductPage() {
   const gallery = p ? [getCoverImage(p), ...(p.images || [])].filter(Boolean) : []
   const [active, setActive] = useState(0)
   const [variant, setVariant] = useState(0)
+  const [mainImageOverride, setMainImageOverride] = useState('')
   if (!p) return <main className="p-8"><button onClick={() => nav('/')} className="rounded border px-3 py-2">Kembali</button><p className="mt-4">Produk tidak ditemukan.</p></main>
+
+  const activeVariantImage = p.variations?.[variant]?.option_image
+  const mainImage = mainImageOverride || activeVariantImage || gallery[active]
 
   return (
     <main className="max-w-[1440px] mx-auto px-margin-page py-4">
@@ -150,11 +154,18 @@ function ProductPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 space-y-4">
           <div className="aspect-square rounded-xl overflow-hidden bg-white border border-outline-variant group relative">
-            <img alt={p.name} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" src={gallery[active]} />
+            <img alt={p.name} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" src={mainImage} />
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {gallery.map((img, i) => (
-              <button key={`${img}-${i}`} className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1 ${i === active ? 'border-2 border-primary' : 'border border-outline-variant'}`} onClick={() => setActive(i)}>
+              <button
+                key={`${img}-${i}`}
+                className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-white p-1 ${i === active ? 'border-2 border-primary' : 'border border-outline-variant'}`}
+                onClick={() => {
+                  setActive(i)
+                  setMainImageOverride(img)
+                }}
+              >
                 <img alt={`Thumb ${i + 1}`} className="w-full h-full object-contain" src={img} />
               </button>
             ))}
@@ -170,7 +181,15 @@ function ProductPage() {
               <div className="flex justify-between items-center"><h3 className="text-[20px] font-semibold">Pilih Varian</h3></div>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                 {p.variations.map((v, i) => (
-                  <button key={v.option_name} onClick={() => setVariant(i)} className={`cursor-pointer rounded-xl p-3 flex flex-col items-center text-center transition-all ${i === variant ? 'border-2 border-primary bg-primary/5' : 'border border-outline-variant bg-white hover:border-primary'}`}>
+                  <button
+                    key={v.option_name}
+                    onClick={() => {
+                      setVariant(i)
+                      setMainImageOverride(v.option_image || '')
+                      if (!v.option_image) setActive(0)
+                    }}
+                    className={`cursor-pointer rounded-xl p-3 flex flex-col items-center text-center transition-all ${i === variant ? 'border-2 border-primary bg-primary/5' : 'border border-outline-variant bg-white hover:border-primary'}`}
+                  >
                     <div className="w-16 h-16 mb-2 rounded-lg bg-white p-1 border border-outline-variant"><img alt={v.option_name} className="w-full h-full object-contain" src={v.option_image || getCoverImage(p)} /></div>
                     <span className={`text-[12px] ${i === variant ? 'font-bold text-on-surface' : 'text-on-surface-variant'}`}>{v.option_name}</span>
                   </button>
